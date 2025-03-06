@@ -18,3 +18,6 @@ class HTMLNode:
             props_str += f' {key}="{val}"'
         
         return props_str
+    
+    def __repr__(self):
+        return f"HTMLNode({self.tag}, {self.value}, {self.children}, {self.props})"
