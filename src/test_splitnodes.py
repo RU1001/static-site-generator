@@ -1,5 +1,5 @@
 import unittest
-from split_nodes import split_nodes_delimiter
+from split_nodes import split_nodes_delimiter, split_nodes_image, split_nodes_link
 from textnode import TextNode, TextType
 
 class TestSplitDelimiter(unittest.TestCase):
@@ -35,4 +35,55 @@ class TestSplitDelimiter(unittest.TestCase):
         self.assertEqual(new_nodes[0].text, "This has an ")
         self.assertEqual(new_nodes[1].text, "")
         self.assertEqual(new_nodes[1].text_type, TextType.CODE)
+
+
+
+
+
+    def test_split_nodes_image_basic(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
+
+    def test_split_nodes_image_none(self):
+        # Test with no images
+        node = TextNode("This is text with no images", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual([node], new_nodes)
+
+    def test_split_nodes_image_at_beginning(self):
+        # Test with image at beginning of text
+        node = TextNode(
+            "![image](https://example.com/img.png) followed by text",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("image", TextType.IMAGE, "https://example.com/img.png"),
+                TextNode(" followed by text", TextType.TEXT),
+            ],
+            new_nodes,
+        )
+
+    def test_split_nodes_image_at_end(self):
+        # Test with image at end of text
+        node = TextNode(
+            "This is text followed by ![image](https://example.com/img.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
 
