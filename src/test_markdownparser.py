@@ -1,7 +1,7 @@
 import unittest
 from htmlnode import HTMLNode, LeafNode
 from textnode import TextNode, TextType
-from markdown_parser import text_node_to_html_node
+from markdown_parser import text_node_to_html_node, extract_markdown_images, extract_markdown_links
 
 class TestMarkdownParser(unittest.TestCase):
     def test_text(self):
@@ -39,3 +39,28 @@ class TestMarkdownParser(unittest.TestCase):
         self.assertEqual(html_node.value, "Boot.dev")
         self.assertEqual(html_node.props["href"], "https://boot.dev")
         self.assertEqual(html_node.to_html(), '<a href="https://boot.dev">Boot.dev</a>')
+
+
+    def test_extract_markdown_images(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+
+    def test_extract_markdown_links(self):
+        matches = extract_markdown_links(
+            "This is text with a [link](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("link", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+
+
+    def test_extract_markdown_links_empty(self):
+        matches = extract_markdown_links("This text has no links at all")
+        self.assertListEqual([], matches)
+
+    def test_extract_markdown_images_empty(self):
+        matches = extract_markdown_images("This text has no images at all")
+        self.assertListEqual([], matches)
+
