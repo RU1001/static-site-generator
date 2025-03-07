@@ -1,6 +1,5 @@
 import unittest
 from htmlnode import HTMLNode, LeafNode
-
 class TestLeafNode(unittest.TestCase):
 
     def test_leaf_to_html_p(self):
@@ -27,4 +26,4 @@ class TestLeafNode(unittest.TestCase):
         # Test a node with properties
         node = LeafNode("a", "Click me", {"href": "https://example.com", "class": "link"})
         self.assertEqual(node.to_html(), '<a href="https://example.com" class="link">Click me</a>')
-    
+

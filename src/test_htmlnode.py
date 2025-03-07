@@ -1,6 +1,7 @@
 import unittest
 from htmlnode import HTMLNode
 
+
 class TestHTMLNode(unittest.TestCase):
     def test_attributes(self):
         node = HTMLNode("h1", "Welcome to this page")
