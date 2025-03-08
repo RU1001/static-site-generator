@@ -7,8 +7,31 @@ class HTMLNode:
 
 
     def to_html(self):
-        raise NotImplementedError
-    
+        # Start with opening tag
+        html = f"<{self.tag}"
+        
+        # Add any attributes if they exist
+        if self.props:
+            for attr, value in self.props.items():
+                html += f' {attr}="{value}"'
+        
+        # Close the opening tag
+        html += ">"
+        
+        # Add the value (text content) if it exists
+        if self.value:
+            html += self.value
+        
+        # Add HTML from all children
+        if self.children:
+            for child in self.children:
+                html += child.to_html()
+        
+        # Add closing tag
+        html += f"</{self.tag}>"
+        
+        return html
+        
     def props_to_html(self):
         if self.props is None:
             return ""
@@ -85,5 +108,5 @@ class ParentNode(HTMLNode):
         
         return html
 
+        
             
-                

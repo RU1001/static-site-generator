@@ -1,7 +1,6 @@
 import unittest
-from htmlnode import HTMLNode, LeafNode
 from textnode import TextNode, TextType
-from markdown_parser import text_node_to_html_node, extract_markdown_images, extract_markdown_links, markdown_to_blocks
+from markdown_parser import *
 
 class TestMarkdownParser(unittest.TestCase):
     def test_text(self):
@@ -95,3 +94,4 @@ class TestMarkdownParser(unittest.TestCase):
         md_whitespace = "    \n\n    "
         blocks = markdown_to_blocks(md_whitespace)
         self.assertEqual(blocks, [])
+
