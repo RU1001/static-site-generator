@@ -35,3 +35,18 @@ def extract_markdown_links(text):
     link_matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
     return link_matches
 
+
+def markdown_to_blocks(markdown):
+    blocks = markdown.split("\n\n")
+    clean_blocks = []
+    for block in blocks:
+        new = block.strip()
+        if new != "":
+            # Process each line in the block to remove indentation
+            lines = new.split("\n")
+            cleaned_lines = [line.strip() for line in lines]
+            cleaned_block = "\n".join(cleaned_lines)
+            clean_blocks.append(cleaned_block)
+    return clean_blocks
+
+        

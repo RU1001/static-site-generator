@@ -1,5 +1,5 @@
 import unittest
-from split_nodes import split_nodes_delimiter, split_nodes_image, split_nodes_link
+from split_nodes import split_nodes_delimiter, split_nodes_image, text_to_textnodes
 from textnode import TextNode, TextType
 
 class TestSplitDelimiter(unittest.TestCase):
@@ -86,4 +86,5 @@ class TestSplitDelimiter(unittest.TestCase):
             TextType.TEXT,
         )
         new_nodes = split_nodes_image([node])
+
 

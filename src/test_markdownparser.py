@@ -1,7 +1,7 @@
 import unittest
 from htmlnode import HTMLNode, LeafNode
 from textnode import TextNode, TextType
-from markdown_parser import text_node_to_html_node, extract_markdown_images, extract_markdown_links
+from markdown_parser import text_node_to_html_node, extract_markdown_images, extract_markdown_links, markdown_to_blocks
 
 class TestMarkdownParser(unittest.TestCase):
     def test_text(self):
@@ -64,3 +64,34 @@ class TestMarkdownParser(unittest.TestCase):
         matches = extract_markdown_images("This text has no images at all")
         self.assertListEqual([], matches)
 
+
+
+    def test_markdown_to_blocks(self):
+        md = """
+    This is **bolded** paragraph
+
+    This is another paragraph with _italic_ text and `code` here
+    This is the same paragraph on a new line
+
+    - This is a list
+    - with items
+    """
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+
+
+    def test_empty_markdown(self):
+        md = ""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, [])
+        
+        md_whitespace = "    \n\n    "
+        blocks = markdown_to_blocks(md_whitespace)
+        self.assertEqual(blocks, [])
