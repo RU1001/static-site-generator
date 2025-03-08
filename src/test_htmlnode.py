@@ -1,45 +1,73 @@
 import unittest
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, LeafNode, ParentNode
 
 
 class TestHTMLNode(unittest.TestCase):
-    def test_attributes(self):
-        node = HTMLNode("h1", "Welcome to this page")
-        node2 = HTMLNode("h1", "Welcome to this page")
-        self.assertEqual(node.tag, node2.tag)
-        self.assertEqual(node.value, node2.value)
-
-
-    def test_props_to_html(self):
-        # Create a node with tag "a" and props including href
+    def test_to_html_props(self):
         node = HTMLNode(
-            tag="a", 
-            props={"href": "https://www.google.com"}
+            "div",
+            "Hello, world!",
+            None,
+            {"class": "greeting", "href": "https://boot.dev"},
         )
-        # Test that props_to_html returns the expected string
         self.assertEqual(
             node.props_to_html(),
-            ' href="https://www.google.com"'
+            ' class="greeting" href="https://boot.dev"',
         )
-        
-        # Test with multiple props
-        node2 = HTMLNode(
-            tag="a",
-            props={"href": "https://www.google.com", "target": "_blank"}
+
+    def test_to_html_no_children(self):
+        node = LeafNode("p", "Hello, world!")
+        self.assertEqual(node.to_html(), "<p>Hello, world!</p>")
+
+    def test_to_html_no_tag(self):
+        node = LeafNode(None, "Hello, world!")
+        self.assertEqual(node.to_html(), "Hello, world!")
+
+    def test_to_html_with_children(self):
+        child_node = LeafNode("span", "child")
+        parent_node = ParentNode("div", [child_node])
+        self.assertEqual(parent_node.to_html(),
+                         "<div><span>child</span></div>")
+
+    def test_to_html_with_grandchildren(self):
+        grandchild_node = LeafNode("b", "grandchild")
+        child_node = ParentNode("span", [grandchild_node])
+        parent_node = ParentNode("div", [child_node])
+        self.assertEqual(
+            parent_node.to_html(),
+            "<div><span><b>grandchild</b></span></div>",
         )
-        # The exact order might vary, so we could check for both substrings
-        result = node2.props_to_html()
-        self.assertTrue(' href="https://www.google.com"' in result)
-        self.assertTrue(' target="_blank"' in result)
+
+    def test_to_html_many_children(self):
+        node = ParentNode(
+            "p",
+            [
+                LeafNode("b", "Bold text"),
+                LeafNode(None, "Normal text"),
+                LeafNode("i", "italic text"),
+                LeafNode(None, "Normal text"),
+            ],
+        )
+        self.assertEqual(
+            node.to_html(),
+            "<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>",
+        )
+
+    def test_headings(self):
+        node = ParentNode(
+            "h2",
+            [
+                LeafNode("b", "Bold text"),
+                LeafNode(None, "Normal text"),
+                LeafNode("i", "italic text"),
+                LeafNode(None, "Normal text"),
+            ],
+        )
+        self.assertEqual(
+            node.to_html(),
+            "<h2><b>Bold text</b>Normal text<i>italic text</i>Normal text</h2>",
+        )
 
 
-    def test_repr(self):
-        node = HTMLNode(tag="p", value="hello", props={"class": "intro"})
-        repr_string = repr(node)
-        # Check that all important attributes are mentioned in the representation
-        self.assertIn("p", repr_string)
-        self.assertIn("hello", repr_string)
-        self.assertIn("class", repr_string)
-        self.assertIn("intro", repr_string)
-
-
+if __name__ == "__main__":
+    unittest.main()

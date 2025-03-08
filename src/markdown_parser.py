@@ -1,188 +1,108 @@
-from htmlnode import HTMLNode, LeafNode
-from textnode import TextNode, TextType
-from blocktype import block_to_block_type
 import re
 
+from textnode import (
+    TextNode,
+    text_type_text,
+    text_type_bold,
+    text_type_italic,
+    text_type_code,
+    text_type_image,
+    text_type_link,
+)
 
-def text_node_to_html_node(text_node):
-    if not isinstance(text_node, TextNode):
-        raise ValueError(f"text_node must be an instance of TextNode, got {text_node})")
-        
-        
-    if text_node.text_type == TextType.TEXT:
-        return LeafNode(None, text_node.text)
-    elif text_node.text_type == TextType.BOLD:
-        return LeafNode("b", text_node.text)
-    elif text_node.text_type == TextType.ITALIC:
-        return LeafNode("i", text_node.text)
-    elif text_node.text_type == TextType.CODE:
-        return LeafNode("code", text_node.text)
-    elif text_node.text_type == TextType.LINK:
-        return LeafNode("a", text_node.text, {"href": text_node.url})
-    elif text_node.text_type == TextType.IMAGE:
-        return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text})
-    else:
-        raise ValueError(f"Invalid TextType: {text_node.text_type}")
-    
 
+def text_to_textnodes(text):
+    nodes = [TextNode(text, text_type_text)]
+    nodes = split_nodes_delimiter(nodes, "**", text_type_bold)
+    nodes = split_nodes_delimiter(nodes, "*", text_type_italic)
+    nodes = split_nodes_delimiter(nodes, "`", text_type_code)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    return nodes
+
+
+def split_nodes_delimiter(old_nodes, delimiter, text_type):
+    new_nodes = []
+    for old_node in old_nodes:
+        if old_node.text_type != text_type_text:
+            new_nodes.append(old_node)
+            continue
+        split_nodes = []
+        sections = old_node.text.split(delimiter)
+        if len(sections) % 2 == 0:
+            raise ValueError("Invalid markdown, bold section not closed")
+        for i in range(len(sections)):
+            if sections[i] == "":
+                continue
+            if i % 2 == 0:
+                split_nodes.append(TextNode(sections[i], text_type_text))
+            else:
+                split_nodes.append(TextNode(sections[i], text_type))
+        new_nodes.extend(split_nodes)
+    return new_nodes
+
+
+def split_nodes_image(old_nodes):
+    new_nodes = []
+    for old_node in old_nodes:
+        if old_node.text_type != text_type_text:
+            new_nodes.append(old_node)
+            continue
+        original_text = old_node.text
+        images = extract_markdown_images(original_text)
+        if len(images) == 0:
+            new_nodes.append(old_node)
+            continue
+        for image in images:
+            sections = original_text.split(f"![{image[0]}]({image[1]})", 1)
+            if len(sections) != 2:
+                raise ValueError("Invalid markdown, image section not closed")
+            if sections[0] != "":
+                new_nodes.append(TextNode(sections[0], text_type_text))
+            new_nodes.append(
+                TextNode(
+                    image[0],
+                    text_type_image,
+                    image[1],
+                )
+            )
+            original_text = sections[1]
+        if original_text != "":
+            new_nodes.append(TextNode(original_text, text_type_text))
+    return new_nodes
+
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    for old_node in old_nodes:
+        if old_node.text_type != text_type_text:
+            new_nodes.append(old_node)
+            continue
+        original_text = old_node.text
+        links = extract_markdown_links(original_text)
+        if len(links) == 0:
+            new_nodes.append(old_node)
+            continue
+        for link in links:
+            sections = original_text.split(f"[{link[0]}]({link[1]})", 1)
+            if len(sections) != 2:
+                raise ValueError("Invalid markdown, link section not closed")
+            if sections[0] != "":
+                new_nodes.append(TextNode(sections[0], text_type_text))
+            new_nodes.append(TextNode(link[0], text_type_link, link[1]))
+            original_text = sections[1]
+        if original_text != "":
+            new_nodes.append(TextNode(original_text, text_type_text))
+    return new_nodes
 
 
 def extract_markdown_images(text):
-    image_match = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-    return image_match
+    pattern = r"!\[(.*?)\]\((.*?)\)"
+    matches = re.findall(pattern, text)
+    return matches
 
 
 def extract_markdown_links(text):
-    link_matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-    return link_matches
-
-
-def markdown_to_blocks(markdown):
-    blocks = markdown.split("\n\n")
-    clean_blocks = []
-    for block in blocks:
-        new = block.strip()
-        if new != "":
-            # Process each line in the block to remove indentation
-            lines = new.split("\n")
-            cleaned_lines = [line.strip() for line in lines]
-            cleaned_block = "\n".join(cleaned_lines)
-            clean_blocks.append(cleaned_block)
-    return clean_blocks
-
-
-
-
-
-
-
-def text_to_children(text):
-    """Convert a text string with inline markdown to a list of HTMLNode objects"""
-    # First, parse the text into TextNode objects
-    from split_nodes import text_to_textnodes
-    text_nodes = text_to_textnodes(text)  # This should be a function you built earlier
-    
-    # Convert each TextNode to an HTMLNode
-    html_nodes = []
-    for text_node in text_nodes:
-        html_node = text_node_to_html_node(text_node)  # Another function you built earlier
-        html_nodes.append(html_node)
-    
-    return html_nodes
-
-
-
-
-def markdown_to_html_node(markdown):
-    markdown_blocks = markdown_to_blocks(markdown)
-    parent_node = HTMLNode("div", None, [], None)
-
-    for block in markdown_blocks:
-        block_type = block_to_block_type(block)
-
-        if block_type == "paragraph":
-            # Create a paragraph node
-            block_node = HTMLNode("p", None, [], None)
-            
-            # Process the text in the block to create child nodes
-            children = text_to_children(block)
-            block_node.children = children
-            parent_node.children.append(block_node)
-            
-        elif block_type == "code":
-            # Strip the triple backticks and extract code content
-            code_lines = block.split("\n")
-            # Skip the first and last lines (which may contain the ```)
-            code_content = "\n".join(code_lines[1:-1])
-            
-            # Create a simple TextNode (no parsing) for the code content
-            text_node = TextNode(code_content, "text")
-            code_node = text_node_to_html_node(text_node)
-            
-            # Wrap code in pre tag
-            block_node = HTMLNode("pre", None, [code_node], None)
-            parent_node.children.append(block_node)
-
-        elif block_type == "heading":
-            # Count hashtags to determine heading level
-            level = 0
-            for char in block:
-                if char == '#':
-                    level += 1
-                else:
-                    break
-            
-            # Create heading node (h1-h6)
-            block_node = HTMLNode(f"h{level}", None, [], None)
-            
-            # Process text without the hashtags
-            text = block[level:].strip()
-            children = text_to_children(text)
-            block_node.children = children
-            parent_node.children.append(block_node)
-
-        elif block_type == "unordered_list":
-            # Create unordered list node (ul)
-            block_node = HTMLNode("ul", None, [], None)
-            
-            # Split the list items by line
-            items = block.split("\n")
-            for item in items:
-                if item.strip().startswith("- "):
-                    # Remove the "- " prefix
-                    item_text = item.strip()[2:]
-                    # Create li node for each list item
-                    li_node = HTMLNode("li", None, [], None)
-                    # Process item text for inline markdown
-                    li_node.children = text_to_children(item_text)
-                    block_node.children.append(li_node)
-            parent_node.children.append(block_node)
-
-        elif block_type == "ordered_list":
-            block_node = HTMLNode("ol", None, [], None)
-            items = block.split("\n")
-            for item in items:
-                # Check if the item starts with a digit followed by a period
-                if item.strip() and any(item.strip().startswith(f"{i}.") for i in range(10)):
-                    # Find the first dot after the number
-                    dot_index = item.find(".")
-                    if dot_index != -1:
-                        # Extract the text after the number and period
-                        item_text = item[dot_index+1:].strip()
-                        # Create li node for each list item
-                        li_node = HTMLNode("li", None, [], None)
-                        # Process item text for inline markdown
-                        li_node.children = text_to_children(item_text)
-                        block_node.children.append(li_node)
-            parent_node.children.append(block_node)
-
-
-        elif block_type == "quote":
-            block_node = HTMLNode("blockquote", None, [], None)
-            # Remove the '>' symbols at the beginning of each line
-            lines = block.split("\n")
-            quote_content = ""
-            for line in lines:
-                if line.strip().startswith(">"):
-                    # Remove the '>' and any space that might follow it
-                    cleaned_line = line.strip()[1:].strip()
-                    quote_content += cleaned_line + " "
-                else:
-                    # If a line doesn't start with '>', still include it in the quote
-                    quote_content += line.strip() + " "
-            
-            # Process the quote content for inline markdown
-            block_node.children = text_to_children(quote_content.strip())
-            parent_node.children.append(block_node)
-
-    return parent_node
-
-
-        
-                                        
-
-                        
-
-
-
-        
+    pattern = r"\[(.*?)\]\((.*?)\)"
+    matches = re.findall(pattern, text)
+    return matches
