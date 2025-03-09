@@ -111,9 +111,9 @@ def heading_to_html_node(block):
             break
     if level + 1 >= len(block):
         raise ValueError(f"Invalid heading level: {level}")
-    text = block[level + 1:]
+    text = block[level + 1:].strip()  # Strip leading/trailing whitespace
     children = text_to_children(text)
-    return ParentNode(f"h{level}", children)
+    return ParentNode(f"h{level}", children, None)  # Add None for attributes
 
 
 def code_to_html_node(block):
