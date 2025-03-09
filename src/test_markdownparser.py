@@ -1,14 +1,5 @@
 import unittest
-from markdown_parser import (
-    split_nodes_delimiter,
-    split_nodes_image,
-    split_nodes_link,
-    text_to_textnodes,
-    extract_markdown_links,
-    extract_markdown_images,
-)
-
-from blocktype import block_type_olist,block_type_code,block_type_heading
+from markdown_parser import * 
 
 from textnode import (
     TextNode,
@@ -194,6 +185,12 @@ class TestInlineMarkdown(unittest.TestCase):
             ],
             nodes,
         )
+
+
+
+    def text_markdown_extract_title(self):
+        title = extract_title("# Hello")
+        self.assertEqual(title, "Hello")
 
 
 if __name__ == "__main__":
