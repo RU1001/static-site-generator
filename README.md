@@ -15,17 +15,23 @@ Follow these instructions to set up and serve the project:
 
 1. **Clone this repository**:
     ```bash
-    git clone <your-repo-url>
-    cd <your-repo-name>
+    git clone <repo-url>
+    cd <repo-name>
     ```
-2. **Navigate to the `public` directory**:
-    ```bash
-    cd public
-    ```
-3. **Serve the directory using Python's HTTP server**:
-    ```bash
-    python3 -m http.server 8888
-    ```
-4. **View your site**:
-    - Open your browser and go to `http://localhost:8888`.
+## Features
 
+- Converts Markdown to HTML
+- Supports code blocks with syntax highlighting
+- Processes internal links between pages
+- Generates a navigation menu
+- [Any other features you've implemented]
+
+## Installation
+
+1. Clone this repository
+2. [Any dependencies or setup instructions]
+
+## Usage
+
+```bash
+python src/main.py [input_directory] [output_directory]
